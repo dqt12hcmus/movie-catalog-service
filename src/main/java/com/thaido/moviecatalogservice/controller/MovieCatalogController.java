@@ -5,6 +5,7 @@ import com.thaido.moviecatalogservice.model.Movie;
 import com.thaido.moviecatalogservice.model.Rating;
 import com.thaido.moviecatalogservice.model.UserRatings;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cloud.client.discovery.DiscoveryClient;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -26,12 +27,15 @@ public class MovieCatalogController {
   @Autowired
   private WebClient.Builder webClient;
 
+  @Autowired
+  private DiscoveryClient discoveryClient;
+
   @RequestMapping("/{userId}")
   public List<CatalogItem> getCatalog(@PathVariable("userId") String userId) {
     WebClient.Builder builder = WebClient.builder();
 
     UserRatings ratings = restTemplate.getForObject(
-      "http://localhost:8082/rating/user/" + userId,
+      "http://rating-data-service/rating/user/" + userId,
       UserRatings.class
     );
 
@@ -41,7 +45,7 @@ public class MovieCatalogController {
         rating ->
         {
           Movie movie = restTemplate.getForObject(
-            "http://localhost:8081/movies/" + rating.getMovieId(),
+            "http://movie-info-service/movies/" + rating.getMovieId(),
             Movie.class
           );
           return new CatalogItem(
